@@ -10,6 +10,8 @@ defmodule Nostrum.Application do
   @doc false
   def start(_type, _args) do
     if Application.get_env(:nostrum, :disabled?) do
+      Supervisor.start_link([], strategy: :one_for_one)
+    else
       Token.check_token!()
       check_executables()
       setup_ets_tables()
@@ -25,8 +27,6 @@ defmodule Nostrum.Application do
       if Application.get_env(:nostrum, :dev),
         do: Supervisor.start_link(children ++ [DummySupervisor], strategy: :one_for_one),
         else: Supervisor.start_link(children, strategy: :one_for_one)
-    else
-      Supervisor.start_link([], strategy: :one_for_one)
     end
   end
 
