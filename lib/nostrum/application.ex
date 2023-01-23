@@ -9,21 +9,25 @@ defmodule Nostrum.Application do
 
   @doc false
   def start(_type, _args) do
-    Token.check_token!()
-    check_executables()
-    setup_ets_tables()
+    if Application.get_env(:nostrum, :disabled?) do
+      Token.check_token!()
+      check_executables()
+      setup_ets_tables()
 
-    children = [
-      Nostrum.Api.Ratelimiter,
-      Nostrum.Shard.Connector,
-      Nostrum.Cache.CacheSupervisor,
-      Nostrum.Shard.Supervisor,
-      Nostrum.Voice.Supervisor
-    ]
+      children = [
+        Nostrum.Api.Ratelimiter,
+        Nostrum.Shard.Connector,
+        Nostrum.Cache.CacheSupervisor,
+        Nostrum.Shard.Supervisor,
+        Nostrum.Voice.Supervisor
+      ]
 
-    if Application.get_env(:nostrum, :dev),
-      do: Supervisor.start_link(children ++ [DummySupervisor], strategy: :one_for_one),
-      else: Supervisor.start_link(children, strategy: :one_for_one)
+      if Application.get_env(:nostrum, :dev),
+        do: Supervisor.start_link(children ++ [DummySupervisor], strategy: :one_for_one),
+        else: Supervisor.start_link(children, strategy: :one_for_one)
+    else
+      Supervisor.start_link([], strategy: :one_for_one)
+    end
   end
 
   @doc false
